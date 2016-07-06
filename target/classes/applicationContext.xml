@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- Activate Cocoon Spring Configurator -->
+    <context:component-scan base-package="com.webapp.service"/>
+    <context:component-scan base-package="com.webapp.dao"/>
+    <context:component-scan base-package="com.webapp.model"/>
+
+    <context:property-placeholder location="classpath:data-access.properties"/>
+    <!--dataSource from spring-jdbc-->
+    <!--<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>-->
+    <!--configuration dataSource via c3p0-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${jdbc.driverClassName}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+
+        <!--these are c3p0 properties-->
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+        <property name="acquireIncrement" value="${jdbc.acquireIncrement}"/>
+        <property name="maxIdleTime" value="${jdbc.maxIdleTime}"/>
+        <property name="checkoutTimeout" value="${jdbc.checkoutTimeOut}"/>
+        <property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}"/>
+        <property name="maxStatements" value="${jdbc.maxStatements}"/>
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"/>
+        <property name="minPoolSize" value="${jdbc.minPoolSize}"/>
+    </bean>
+
+    <!--事物管理-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="SessionFactory"/>
+    </bean>
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <bean id="SessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+            p:dataSource-ref="dataSource"
+           p:packagesToScan="com.webapp.model">
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <prop key="show_sql">true</prop>
+                <prop key="format_sql">true</prop>
+            </props>
+        </property>
+       <!-- <property name="annotatedClasses">
+            <list>
+                <value>com.webapp.model.Employee</value>
+            </list>
+        </property>-->
+
+
+        <!--<property name="configLocations">
+            <list>
+                <value>classpath:/com/webapp/mapper/Student.hbm.xml</value>
+            </list>
+        </property>-->
+        <!--<property name="mappingResources" >
+            <list>
+                <value>com/webapp/mapper/Student.hbm.xml</value>
+            </list>
+        </property>-->
+    </bean>
+
+    <bean id="HibernateTemplate" class="org.springframework.orm.hibernate4.HibernateTemplate"
+            p:sessionFactory-ref="SessionFactory">
+    </bean>
+
+    <bean class="org.springframework.jdbc.core.JdbcTemplate" id="jdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+</beans>
